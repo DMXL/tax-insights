@@ -1,0 +1,42 @@
+{
+  "name": "tax-insights",
+  "version": "1.0.0",
+  "description": "Some income tax insights in graphs, using AntV's G2.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node server.js",
+    "dev": "concurrently -k \"grunt\" \"node server.js\"",
+    "prod": "grunt build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DMXL/tax-insights.git"
+  },
+  "keywords": [
+    "g2",
+    "antv"
+  ],
+  "author": "dmxl",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DMXL/tax-insights/issues"
+  },
+  "homepage": "https://github.com/DMXL/tax-insights#readme",
+  "dependencies": {
+    "@antv/data-set": "^0.8.6",
+    "@antv/g2": "^3.0.5-beta.6"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "babelify": "^8.0.0",
+    "concurrently": "^3.5.1",
+    "express": "^4.16.3",
+    "grunt": "^1.0.2",
+    "grunt-browserify": "^5.2.0",
+    "grunt-contrib-sass": "^1.0.0",
+    "grunt-contrib-uglify": "^3.3.0",
+    "grunt-contrib-watch": "^1.0.0"
+  }
+}
