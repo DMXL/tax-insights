@@ -11,6 +11,8 @@ var _dataSet2 = _interopRequireDefault(_dataSet);
 
 var _data = require('./lib/data');
 
+var _data2 = _interopRequireDefault(_data);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ds = new _dataSet2.default(); /*
@@ -19,24 +21,31 @@ var ds = new _dataSet2.default(); /*
                                    * @Author: dm@dmon-studo.com
                                    * @Date: 2018-04-02 14:34:45
                                    * @Last Modified by: dm@dmon-studo.com
-                                   * @Last Modified time: 2018-04-02 16:52:31
+                                   * @Last Modified time: 2018-04-03 18:04:37
                                    */
 
-var dv = ds.createView().source(_data.data);
+var dv = ds.createView().source(_data2.default);
+
 dv.transform({
   type: 'fold',
-  fields: ['Tokyo', 'London'], // 展开字段集
-  key: 'city', // key字段
-  value: 'temperature' // value字段
+  fields: ['Taxable', 'Payable'], // 展开字段集
+  key: 'kind', // key字段
+  value: 'RMB' // value字段
 });
 var chart = new _g2.default.Chart({
-  container: 'mountNode',
-  forceFit: true,
-  height: window.innerHeight
+  container: 'graph',
+  // forceFit: true,
+  width: 600,
+  height: 800
 });
 chart.source(dv, {
-  month: {
-    range: [0, 1]
+  income: {
+    ticks: [4000, 8000, 12500, 38500, 58500, 83500],
+    alias: '收入'
+  },
+  type: {
+    type: 'cat',
+    values: ['Tier Delimiter', 'Trend']
   }
 });
 chart.tooltip({
@@ -44,17 +53,23 @@ chart.tooltip({
     type: 'line'
   }
 });
-chart.axis('temperature', {
+chart.axis('RMB', {
   label: {
     formatter: function formatter(val) {
-      return val + '°C';
+      return '￥' + val;
     }
   }
 });
-chart.line().position('month*temperature').color('city');
-chart.point().position('month*temperature').color('city').size(4).shape('circle').style({
-  stroke: '#fff',
-  lineWidth: 1
+chart.axis('income', {
+  title: {
+    position: 'end'
+  }
+});
+chart.line().position('income*RMB').color('kind');
+chart.point().position('income*RMB').color('kind').shape('type', function (type) {
+  return type === 'Tier Delimiter' ? 'circle' : 'line';
+}).size('type', function (type) {
+  return type === 'Tier Delimiter' ? 4 : 1;
 });
 chart.render();
 
@@ -70,10 +85,106 @@ Object.defineProperty(exports, "__esModule", {
  * @Author: dm@dmon-studo.com
  * @Date: 2018-04-02 16:30:39
  * @Last Modified by: dm@dmon-studo.com
- * @Last Modified time: 2018-04-02 16:31:01
+ * @Last Modified time: 2018-04-03 18:09:40
  */
 
-var data = exports.data = [{ month: 'Jan', Tokyo: 7.0, London: 3.9 }, { month: 'Feb', Tokyo: 6.9, London: 4.2 }, { month: 'Mar', Tokyo: 9.5, London: 5.7 }, { month: 'Apr', Tokyo: 14.5, London: 8.5 }, { month: 'May', Tokyo: 18.4, London: 11.9 }, { month: 'Jun', Tokyo: 21.5, London: 15.2 }, { month: 'Jul', Tokyo: 25.2, London: 17.0 }, { month: 'Aug', Tokyo: 26.5, London: 16.6 }, { month: 'Sep', Tokyo: 23.3, London: 14.2 }, { month: 'Oct', Tokyo: 18.3, London: 10.3 }, { month: 'Nov', Tokyo: 13.9, London: 6.6 }, { month: 'Dec', Tokyo: 9.6, London: 4.8 }];
+var THRESHOLD = 3500;
+var TIERS = [{ rate: .03, qcd: 0, min: 0, max: 1500 }, { rate: .1, qcd: 105, min: 1501, max: 4500 }, { rate: .2, qcd: 555, min: 4501, max: 9000 }, { rate: .25, qcd: 1005, min: 9001, max: 35000 }, { rate: .3, qcd: 2755, min: 35001, max: 55000 }, { rate: .35, qcd: 5505, min: 55001, max: 80000 }, { rate: .45, qcd: 13505, min: 80000, max: NaN }];
+
+var range = [0, 100000];
+var interval = 500;
+var data = [];
+var delimiters = new Set();
+
+var getTax = function getTax(income) {
+  var Taxable = income - THRESHOLD;
+  var Payable = 0;
+  // No tax you lucky bastard
+  if (Taxable <= 0) {
+    return Payable;
+  }
+
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = TIERS[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var _step$value = _step.value,
+          rate = _step$value.rate,
+          qcd = _step$value.qcd,
+          min = _step$value.min,
+          max = _step$value.max;
+
+      if (Taxable >= min && (isNaN(max) || Taxable <= max)) {
+        Payable = Taxable * rate - qcd;
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return Payable;
+};
+
+var _iteratorNormalCompletion2 = true;
+var _didIteratorError2 = false;
+var _iteratorError2 = undefined;
+
+try {
+  for (var _iterator2 = TIERS[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+    var max = _step2.value.max;
+
+    var _income = max + THRESHOLD;
+
+    data.push({
+      income: _income,
+      Taxable: max,
+      Payable: getTax(_income),
+      type: 'Tier Delimiter'
+    });
+
+    delimiters.add(_income);
+  }
+} catch (err) {
+  _didIteratorError2 = true;
+  _iteratorError2 = err;
+} finally {
+  try {
+    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+      _iterator2.return();
+    }
+  } finally {
+    if (_didIteratorError2) {
+      throw _iteratorError2;
+    }
+  }
+}
+
+for (var income = range[0]; income <= range[1]; income += interval) {
+  if (!delimiters.has(income)) {
+    data.push({
+      income: income,
+      Taxable: income - THRESHOLD > 0 ? income - THRESHOLD : 0,
+      Payable: getTax(income),
+      type: 'Trend'
+    });
+  }
+}
+
+exports.default = data;
 
 },{}],3:[function(require,module,exports){
 (function webpackUniversalModuleDefinition(root, factory) {
