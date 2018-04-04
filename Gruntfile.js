@@ -41,6 +41,15 @@ module.exports = function (grunt) {
       }
     },
 
+    copy: {
+      docs: {
+        expand: true,
+        cwd: 'public/',
+        src: ['*.min.js', '*.html'],
+        dest: 'docs/'
+      }
+    },
+
     express: {
       options: {},
       dev: {
@@ -54,8 +63,10 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-express-server');
   
   grunt.registerTask('default', ['express:dev', 'watch']);
-  grunt.registerTask('build', ['browserify', 'uglify']);
+  grunt.registerTask('build', ['browserify', 'uglify', 'copy:docs']);
+  grunt.registerTask('docs', ['copy:docs']);
 }  
